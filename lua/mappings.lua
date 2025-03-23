@@ -7,7 +7,6 @@ local snacks = require 'snacks'
 local function git_root()
     -- Get current working directory
     local current_dir = vim.fn.getcwd()
-    
     -- Look for git repository markers starting from current directory
     local root = vim.fs.find({ '.gitrepo', '.git' }, { path = current_dir, upward = true })[1]
     
@@ -164,6 +163,9 @@ snacks.toggle.indent():map("<leader>ug")
 snacks.toggle.scroll():map("<leader>uS")
 snacks.toggle.profiler():map("<leader>dpp")
 snacks.toggle.profiler_highlights():map("<leader>dph")
+
+-- explorer
+map("n", "<leader>e", function() snacks.explorer({ cwd = root }) end, { desc = "Snacks explorer (Root Dir)"})
 
 if vim.lsp.inlay_hint then
   snacks.toggle.inlay_hints():map("<leader>uh")

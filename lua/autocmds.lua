@@ -134,3 +134,10 @@ autocmd("BufEnter", {
   pattern = "",
   command = "set fo-=c fo-=r fo-=o",
 })
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*",
+  callback = function(args)
+    require("conform").format({ bufnr = args.buf })
+  end,
+})
