@@ -5,14 +5,14 @@ local snacks = require 'snacks'
 ---Takes into account git subrepos and returns current directory if no git repo is found.
 ---@return string # The root directory of the git repository or current working directory
 local function git_root()
-    -- Get current working directory
-    local current_dir = vim.fn.getcwd()
-    -- Look for git repository markers starting from current directory
-    local root = vim.fs.find({ '.gitrepo', '.git' }, { path = current_dir, upward = true })[1]
-    
-    -- If git root found, return its parent directory; otherwise return current directory
-    local ret = root and vim.fn.fnamemodify(root, ':h') or current_dir
-    return ret
+  -- Get current working directory
+  local current_dir = vim.fn.getcwd()
+  -- Look for git repository markers starting from current directory
+  local root = vim.fs.find({ '.gitrepo', '.git' }, { path = current_dir, upward = true })[1]
+
+  -- If git root found, return its parent directory; otherwise return current directory
+  local ret = root and vim.fn.fnamemodify(root, ':h') or current_dir
+  return ret
 end
 
 
@@ -20,6 +20,10 @@ local root = git_root()
 local cwd = vim.fn.getcwd()
 
 local map = vim.keymap.set
+local del = vim.keymap.del
+
+del("n", "<leader>x") -- delete original nvchad mapping
+del("n", "<leader>b") -- delete original nvchad mapping
 
 -- better up/down
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { desc = "Down", expr = true, silent = true })
@@ -119,6 +123,7 @@ map("n", "<leader>xl", function()
 end, { desc = "Location List" })
 
 -- quickfix list
+
 map("n", "<leader>xq", function()
   local success, err = pcall(vim.fn.getqflist({ winid = 0 }).winid ~= 0 and vim.cmd.cclose or vim.cmd.copen)
   if not success and err then
@@ -153,10 +158,12 @@ snacks.toggle.option("wrap", { name = "Wrap" }):map("<leader>uw")
 snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leader>uL")
 snacks.toggle.diagnostics():map("<leader>ud")
 snacks.toggle.line_number():map("<leader>ul")
-snacks.toggle.option("conceallevel", { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2, name = "Conceal Level" }):map("<leader>uc")
-snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" }):map("<leader>uA")
+snacks.toggle.option("conceallevel",
+  { off = 0, on = vim.o.conceallevel > 0 and vim.o.conceallevel or 2, name = "Conceal Level" }):map("<leader>uc")
+snacks.toggle.option("showtabline", { off = 0, on = vim.o.showtabline > 0 and vim.o.showtabline or 2, name = "Tabline" })
+    :map("<leader>uA")
 snacks.toggle.treesitter():map("<leader>uT")
-snacks.toggle.option("background", { off = "light", on = "dark" , name = "Dark Background" }):map("<leader>ub")
+snacks.toggle.option("background", { off = "light", on = "dark", name = "Dark Background" }):map("<leader>ub")
 snacks.toggle.dim():map("<leader>uD")
 snacks.toggle.animate():map("<leader>ua")
 snacks.toggle.indent():map("<leader>ug")
@@ -165,7 +172,7 @@ snacks.toggle.profiler():map("<leader>dpp")
 snacks.toggle.profiler_highlights():map("<leader>dph")
 
 -- explorer
-map("n", "<leader>e", function() snacks.explorer({ cwd = root }) end, { desc = "Snacks explorer (Root Dir)"})
+map("n", "<leader>e", function() snacks.explorer({ cwd = root }) end, { desc = "Snacks explorer (Root Dir)" })
 
 if vim.lsp.inlay_hint then
   snacks.toggle.inlay_hints():map("<leader>uh")
@@ -173,7 +180,7 @@ end
 
 -- lazygit
 if vim.fn.executable("lazygit") == 1 then
-  map("n", "<leader>gg", function() snacks.lazygit( { cwd = root }) end, { desc = "Lazygit (Root Dir)" })
+  map("n", "<leader>gg", function() snacks.lazygit({ cwd = root }) end, { desc = "Lazygit (Root Dir)" })
   map("n", "<leader>gG", function() snacks.lazygit() end, { desc = "Lazygit (cwd)" })
   map("n", "<leader>gf", function() snacks.picker.git_log_file() end, { desc = "Git Current File History" })
   map("n", "<leader>gl", function() snacks.picker.git_log({ cwd = root }) end, { desc = "Git Log" })
@@ -182,7 +189,7 @@ end
 
 map("n", "<leader>gb", function() snacks.picker.git_log_line() end, { desc = "Git Blame Line" })
 map({ "n", "x" }, "<leader>gB", function() snacks.gitbrowse() end, { desc = "Git Browse (open)" })
-map({"n", "x" }, "<leader>gY", function()
+map({ "n", "x" }, "<leader>gY", function()
   snacks.gitbrowse({ open = function(url) vim.fn.setreg("+", url) end, notify = false })
 end, { desc = "Git Browse (copy)" })
 
@@ -191,13 +198,16 @@ map("n", "<leader>qq", "<cmd>qa<cr>", { desc = "Quit All" })
 
 -- highlights under cursor
 map("n", "<leader>ui", vim.show_pos, { desc = "Inspect Pos" })
-map("n", "<leader>uI", function() vim.treesitter.inspect_tree() vim.api.nvim_input("I") end, { desc = "Inspect Tree" })
+map("n", "<leader>uI", function()
+  vim.treesitter.inspect_tree()
+  vim.api.nvim_input("I")
+end, { desc = "Inspect Tree" })
 
 -- floating terminal
 map("n", "<leader>fT", function() snacks.terminal() end, { desc = "Terminal (cwd)" })
 map("n", "<leader>ft", function() snacks.terminal(nil, { cwd = cwd }) end, { desc = "Terminal (Root Dir)" })
-map("n", "<c-/>",      function() snacks.terminal(nil, { cwd = cwd }) end, { desc = "Terminal (Root Dir)" })
-map("n", "<c-_>",      function() snacks.terminal(nil, { cwd = cwd }) end, { desc = "which_key_ignore" })
+map("n", "<c-/>", function() snacks.terminal(nil, { cwd = cwd }) end, { desc = "Terminal (Root Dir)" })
+map("n", "<c-_>", function() snacks.terminal(nil, { cwd = cwd }) end, { desc = "which_key_ignore" })
 
 -- Terminal Mappings
 map("t", "<C-/>", "<cmd>close<cr>", { desc = "Hide Terminal" })
@@ -205,6 +215,8 @@ map("t", "<c-_>", "<cmd>close<cr>", { desc = "which_key_ignore" })
 
 -- windows
 map("n", "<leader>-", "<C-W>s", { desc = "Split Window Below", remap = true })
+map("n", "<leader>ws", "<C-W>s", { desc = "Split Window Below", remap = true })
+map("n", "<leader>wv", "<C-W>v", { desc = "Split Window Right", remap = true })
 map("n", "<leader>|", "<C-W>v", { desc = "Split Window Right", remap = true })
 map("n", "<leader>wd", "<C-W>c", { desc = "Delete Window", remap = true })
 snacks.toggle.zoom():map("<leader>wm"):map("<leader>uZ")
